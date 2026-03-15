@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AH SHAT - ULTIMATE</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        :root { --gold: #c5a059; --dark: #121212; --green: #075e54; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; user-select: none; }
+        .box { background: #1e1e1e; padding: 20px; border: 1px solid var(--gold); width: 340px; text-align: center; border-radius: 8px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; background: #282828; border: 1px solid var(--gold); color: white; border-radius: 4px; box-sizing: border-box; }
+        button { background: var(--gold); color: black; border: none; padding: 8px; cursor: pointer; font-weight: bold; border-radius: 4px; margin: 2px; }
+        #chat-screen { display: none; width: 100%; max-width: 500px; height: 100vh; background: #e5ddd5; flex-direction: column; }
+        #chat-header { background: var(--green); padding: 10px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }
+        .bubble { max-width: 85%; padding: 10px; border-radius: 10px; color: black; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
+        .admin-style { align-self: flex-start; background: white; border-top-left-radius: 0; }
+        .user-style { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 0; }
+        .media-content { width: 100%; border-radius: 5px; margin-top: 5px; }
+        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; max-height: 85vh; overflow-y: auto; background: #1e1e1e; border: 2px solid var(--gold); padding: 20px; width: 320px; border-radius: 10px; }
+        .u-card { background: #282828; padding: 10px; margin: 8px 0; border-right: 4px solid var(--gold); text-align: right; }
+        .u-card div { margin-bottom: 5px; font-size: 13px; }
+        #input-area { padding: 10px; background: #f0f0f0; display: flex; align-items: center; gap: 5px; }
+        .btn-action { font-size: 10px; padding: 4px 8px; margin-left: 5px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="login-box" class="box">
+        <h2 style="color: var(--gold)">AH SHAT LOG</h2>
+        <select id="user-selector"></select>
+        <input type="password" id="pass-input" placeholder="كلمة السر">
+        <button onclick="login()" style="width:100%">دخول</button>
+    </div>
+
+    <div id="chat-screen">
+        <div id="chat-header">
+            <button onclick="location.reload()" style="background:#b33939; color:white; border:none; padding:5px; border-radius:4px;">خروج</button>
+            <span id="who"></span>
+            <button id="admin-btn" style="display:none; font-size:12px;" onclick="toggleAdmin(true)">إدارة ⚙️</button>
+        </div>
+        <div id="messages"></div>
+        <div id="input-area">
+            <label style="font-size:22px; cursor:pointer;">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
+            <button id="rec-btn" onclick="toggleRec()" style="background:none; font-size:22px;">🎤</button>
+            <input type="text" id="msg-text" style="flex:1; color:black; border-radius:20px; padding:8px; border:1px solid #ccc;" placeholder="رسالة...">
+            <button onclick="send()" style="background:var(--green); color:white; border-radius:50%; width:40px; height:40px;">➤</button>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <h3 style="color:var(--gold); margin-top:0;">إدارة المستخدمين</h3>
+        <div style="background:#333; padding:10px; border-radius:5px;">
+            <input type="text" id="new-u" placeholder="اسم المستخدم الجديد">
+            <input type="text" id="new-p" placeholder="باسورد المستخدم">
+            <button onclick="addUser()" style="width:100%">إضافة مستخدم جديد +</button>
+        </div>
+        <div id="u-list" style="margin-top:15px;"></div>
+        <button onclick="toggleAdmin(false)" style="background:#444; color:white; width:100%; margin-top:10px;">إغلاق</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmXQjJhAi82r_5hr94C-O2TzsSQDdF2mk",
+            databaseURL: "https://ah-shat-default-rtdb.firebaseio.com/",
+            projectId: "ah-shat"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let me = "", isAdmin = false, mediaRecorder, audioChunks = [];
+
+        // مزامنة اليوزرات مع لوحة التحكم
+        db.ref('users').on('value', snap => {
+            const data = snap.val() || {};
+            const sel = document.getElementById('user-selector');
+            const list = document.getElementById('u-list');
+            sel.innerHTML = '<option value="admin">المدير (admin)</option>';
+            list.innerHTML = "";
+            for (let u in data) {
+                sel.innerHTML += `<option value="${u}">${u}</option>`;
+                list.innerHTML += `
+                    <div class="u-card">
+                        <div><b>اليوزر:</b> ${u}</div>
+                        <div><b>الباسورد:</b> ${data[u].pass}</div>
+                        <button class="btn-action" onclick="editUser('${u}', '${data[u].pass}')">تعديل 📝</button>
+                        <button class="btn-action" style="background:red; color:white;" onclick="delUser('${u}')">حذف 🗑️</button>
+                    </div>`;
+            }
+        });
+
+        function login() {
+            const u = document.getElementById('user-selector').value;
+            const p = document.getElementById('pass-input').value;
+            if (u === "admin" && p === "3480") { start("admin", true); }
+            else {
+                db.ref('users/'+u).once('value', s => {
+                    if(s.val() && s.val().pass === p) start(u, false);
+                    else alert("خطأ في البيانات");
+                });
+            }
+        }
+
+        function start(user, admin) {
+            me = user; isAdmin = admin;
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'flex';
+            document.getElementById('who').textContent = user;
+            if(admin) document.getElementById('admin-btn').style.display = 'block';
+            loadMsgs();
+        }
+
+        function send() {
+            const t = document.getElementById('msg-text').value;
+            if(t) { db.ref('msgs').push({ s: me, c: t, t: 'text', ts: Date.now() }); document.getElementById('msg-text').value=""; }
+        }
+
+        function upMedia(input, type) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: type, ts: Date.now() });
+            reader.readAsDataURL(file);
+        }
+
+        // ميزة التسجيل الصوتي
+        async function toggleRec() {
+            const btn = document.getElementById('rec-btn');
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: 'audio', ts: Date.now() });
+                    reader.readAsDataURL(blob);
+                    audioChunks = [];
+                };
+                mediaRecorder.start();
+                btn.textContent = "🛑"; btn.style.color = "red";
+            } else {
+                mediaRecorder.stop();
+                btn.textContent = "🎤"; btn.style.color = "black";
+            }
+        }
+
+        function loadMsgs() {
+            db.ref('msgs').limitToLast(100).on('child_added', s => {
+                const m = s.val();
+                const area = document.getElementById('messages');
+                const div = document.createElement('div');
+                div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
+                let h = `<b>${m.s}:</b><br>`;
+                if(m.t === 'text') h += m.c;
+                else if(m.t === 'img') h += `<img src="${m.c}" class="media-content">`;
+                else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:30px; margin-top:5px;"></audio>`;
+                div.innerHTML = h; area.appendChild(div);
+                area.scrollTop = area.scrollHeight;
+            });
+        }
+
+        function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'block' : 'none'; }
+        
+        function addUser() {
+            const n = document.getElementById('new-u').value.trim();
+            const p = document.getElementById('new-p').value.trim();
+            if(n && p) { db.ref('users/'+n).set({ pass: p }); document.getElementById('new-u').value=""; document.getElementById('new-p').value=""; }
+        }
+
+        function editUser(oldName, oldPass) {
+            const newName = prompt("تعديل اسم اليوزر:", oldName);
+            const newPass = prompt("تعديل الباسورد:", oldPass);
+            if(newName && newPass) {
+                if(newName !== oldName) db.ref('users/'+oldName).remove(); // حذف القديم لو الاسم اتغير
+                db.ref('users/'+newName).set({ pass: newPass });
+            }
+        }
+
+        function delUser(n) { if(confirm('هل تريد حذف '+n+' نهائياً؟')) db.ref('users/'+n).remove(); }
+    </script>
+</body>
+</html>
