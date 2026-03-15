@@ -3,71 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AH SHAT - FINAL FIX</title>
+    <title>AH SHAT - FIXED</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --gold: #c5a059; --dark: #121212; --green: #005c4b; --bg: #0b141a; --header: #202c33; }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        body { font-family: sans-serif; background: var(--dark); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
+        /* استخدام dvh لضمان ثبات الأبعاد على الموبايل */
+        body { font-family: sans-serif; background: var(--dark); color: white; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* شاشة الدخول */
-        #login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; background: var(--dark); }
+        #login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100dvh; padding: 20px; background: var(--dark); z-index: 100; }
         .card { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 320px; text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; }
-        .btn-log { width: 100%; background: var(--gold); color: black; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; outline: none; }
 
-        /* شاشة الشات */
-        #chat-screen { display: none; flex-direction: column; height: 100vh; width: 100%; background: var(--bg); }
-        #chat-header { background: var(--header); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 60px; border-bottom: 1px solid #303d45; flex-shrink: 0; }
+        #chat-screen { display: none; flex-direction: column; height: 100dvh; width: 100%; background: var(--bg); }
+        #chat-header { background: var(--header); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 60px; flex-shrink: 0; border-bottom: 1px solid #303d45; }
         
-        #messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-attachment: fixed; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
         
-        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; position: relative; word-wrap: break-word; }
+        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
         .admin-style { align-self: flex-start; background: var(--header); color: #e9edef; border-top-left-radius: 2px; }
         .user-style { align-self: flex-end; background: var(--green); color: white; border-top-right-radius: 2px; }
-        .name { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 4px; display: block; }
+        .name { font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 4px; display: block; }
 
-        /* تعديل منطقة الإدخال لحل مشكلة الظهور */
+        /* منطقة الإدخال - تم رفعها للأعلى لضمان الظهور */
         #input-area { 
             background: var(--header); 
             padding: 10px 12px; 
             display: flex; 
             align-items: center; 
-            gap: 10px; 
+            gap: 8px; 
             min-height: 70px; 
-            flex-shrink: 0; 
-            padding-bottom: env(safe-area-inset-bottom, 15px); 
+            flex-shrink: 0;
+            border-top: 1px solid #303d45;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* التعامل مع نوتش الموبايل */
         }
-        #msg-text { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 25px; color: white; font-size: 16px; outline: none; }
-        .btn-round { background: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        #msg-text { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 25px; color: white; font-size: 16px; }
+        .btn-round { background: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .icon-btn { font-size: 22px; cursor: pointer; padding: 5px; }
     </style>
 </head>
 <body>
 
     <div id="login-box">
         <div class="card">
-            <h2 style="color: var(--gold); margin-bottom: 15px;">PRIVATE LOG</h2>
+            <h2 style="color: var(--gold); margin-bottom: 15px;">AH SHAT</h2>
             <select id="user-selector"></select>
             <input type="password" id="pass-input" placeholder="كلمة السر">
-            <button class="btn-log" onclick="login()">دخول</button>
+            <button onclick="login()" style="width:100%; background:var(--gold); padding:14px; border-radius:8px; border:none; font-weight:bold;">دخول</button>
         </div>
     </div>
 
     <div id="chat-screen">
         <div id="chat-header">
             <button onclick="location.reload()" style="background:#cc3333; color:white; border:none; padding:6px 12px; border-radius:8px;">خروج</button>
-            <span id="who" style="font-size:18px; font-weight:bold; color:var(--gold);"></span>
-            <button id="admin-btn" style="display:none; background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-weight:bold;" onclick="toggleAdmin(true)">إدارة</button>
+            <span id="who" style="font-weight:bold; color:var(--gold);"></span>
+            <div style="width:50px;"></div>
         </div>
         
         <div id="messages"></div>
 
         <div id="input-area">
-            <label style="font-size:24px; cursor:pointer;">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
-            <button id="rec-btn" onclick="toggleRec()" style="background:none; border:none; font-size:24px;">🎤</button>
-            <input type="text" id="msg-text" placeholder="اكتب رسالة...">
+            <label class="icon-btn">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
+            <button id="rec-btn" onclick="toggleRec()" class="icon-btn" style="background:none; border:none;">🎤</button>
+            <input type="text" id="msg-text" placeholder="مراسلة...">
             <button class="btn-round" onclick="send()">➤</button>
         </div>
     </div>
@@ -92,21 +92,20 @@
         function login() {
             const u = document.getElementById('user-selector').value;
             const p = document.getElementById('pass-input').value;
-            if (u === "admin" && p === "3480") start("admin", true);
+            if (u === "admin" && p === "3480") start("admin");
             else {
                 db.ref('users/'+u).once('value', s => {
-                    if(s.val() && s.val().pass === p) start(u, false);
+                    if(s.val() && s.val().pass === p) start(u);
                     else alert("بيانات خاطئة!");
                 });
             }
         }
 
-        function start(user, admin) {
+        function start(user) {
             me = user;
             document.getElementById('login-box').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('who').textContent = user;
-            if(admin) document.getElementById('admin-btn').style.display = 'block';
             loadMsgs();
         }
 
@@ -141,12 +140,15 @@
 
         function loadMsgs() {
             const area = document.getElementById('messages');
-            db.ref('msgs').limitToLast(40).on('child_added', s => {
+            db.ref('msgs').limitToLast(30).on('child_added', s => {
                 const m = s.val();
                 const div = document.createElement('div');
                 div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
-                div.innerHTML = `<span class="name">${m.s}</span>${m.t === 'text' ? m.c : m.t === 'img' ? '<img src="'+m.c+'" style="width:100%; border-radius:10px;">' : '<audio src="'+m.c+'" controls style="width:200px;"></audio>'}`;
-                area.appendChild(div);
+                let h = `<span class="name">${m.s}</span>`;
+                if(m.t === 'text') h += m.c;
+                else if(m.t === 'img') h += `<img src="${m.c}" style="width:100%; border-radius:10px;">`;
+                else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:35px;"></audio>`;
+                div.innerHTML = h; area.appendChild(div);
                 area.scrollTop = area.scrollHeight;
             });
         }
