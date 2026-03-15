@@ -3,42 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AH SHAT - FIXED</title>
+    <title>AH SHAT PRO - EDIT & DELETE</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --gold: #c5a059; --dark: #121212; --green: #005c4b; --bg: #0b141a; --header: #202c33; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        /* استخدام dvh لضمان ثبات الأبعاد على الموبايل */
         body { font-family: sans-serif; background: var(--dark); color: white; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-
         #login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100dvh; padding: 20px; background: var(--dark); z-index: 100; }
         .card { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 320px; text-align: center; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; outline: none; }
-
         #chat-screen { display: none; flex-direction: column; height: 100dvh; width: 100%; background: var(--bg); }
         #chat-header { background: var(--header); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 60px; flex-shrink: 0; border-bottom: 1px solid #303d45; }
-        
         #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
-        
-        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; cursor: pointer; }
         .admin-style { align-self: flex-start; background: var(--header); color: #e9edef; border-top-left-radius: 2px; }
         .user-style { align-self: flex-end; background: var(--green); color: white; border-top-right-radius: 2px; }
         .name { font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 4px; display: block; }
-
-        /* منطقة الإدخال - تم رفعها للأعلى لضمان الظهور */
-        #input-area { 
-            background: var(--header); 
-            padding: 10px 12px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            min-height: 70px; 
-            flex-shrink: 0;
-            border-top: 1px solid #303d45;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* التعامل مع نوتش الموبايل */
-        }
+        #input-area { background: var(--header); padding: 10px 12px; display: flex; align-items: center; gap: 8px; min-height: 70px; flex-shrink: 0; border-top: 1px solid #303d45; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
         #msg-text { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 25px; color: white; font-size: 16px; }
         .btn-round { background: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .icon-btn { font-size: 22px; cursor: pointer; padding: 5px; }
@@ -61,9 +43,7 @@
             <span id="who" style="font-weight:bold; color:var(--gold);"></span>
             <div style="width:50px;"></div>
         </div>
-        
         <div id="messages"></div>
-
         <div id="input-area">
             <label class="icon-btn">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
             <button id="rec-btn" onclick="toggleRec()" class="icon-btn" style="background:none; border:none;">🎤</button>
@@ -140,17 +120,43 @@
 
         function loadMsgs() {
             const area = document.getElementById('messages');
-            db.ref('msgs').limitToLast(30).on('child_added', s => {
-                const m = s.val();
-                const div = document.createElement('div');
-                div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
-                let h = `<span class="name">${m.s}</span>`;
-                if(m.t === 'text') h += m.c;
-                else if(m.t === 'img') h += `<img src="${m.c}" style="width:100%; border-radius:10px;">`;
-                else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:35px;"></audio>`;
-                div.innerHTML = h; area.appendChild(div);
+            db.ref('msgs').on('value', snap => {
+                area.innerHTML = "";
+                snap.forEach(s => {
+                    const m = s.val();
+                    const key = s.key;
+                    const div = document.createElement('div');
+                    div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
+                    
+                    // إضافة وظيفة التعديل والحذف عند الضغط على الرسالة
+                    div.onclick = () => { if(m.s === me) manageMsg(key, m.c, m.t); };
+
+                    let h = `<span class="name">${m.s}</span>`;
+                    if(m.t === 'text') h += m.c;
+                    else if(m.t === 'img') h += `<img src="${m.c}" style="width:100%; border-radius:10px;">`;
+                    else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:35px;"></audio>`;
+                    
+                    div.innerHTML = h;
+                    area.appendChild(div);
+                });
                 area.scrollTop = area.scrollHeight;
             });
+        }
+
+        function manageMsg(key, content, type) {
+            const action = confirm("هل تريد تعديل أو حذف هذه الرسالة؟\n(موافق للتعديل - إلغاء للحذف)");
+            if (action) {
+                if (type === 'text') {
+                    const newText = prompt("عدل رسالتك:", content);
+                    if (newText) db.ref('msgs/' + key).update({ c: newText });
+                } else {
+                    alert("يمكن تعديل النصوص فقط، الصور والصوت تُحذف فقط.");
+                }
+            } else {
+                if(confirm("هل أنت متأكد من حذف الرسالة نهائياً؟")) {
+                    db.ref('msgs/' + key).remove();
+                }
+            }
         }
     </script>
 </body>
