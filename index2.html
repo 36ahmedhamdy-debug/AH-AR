@@ -3,48 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AH SHAT - ULTIMATE</title>
+    <title>AH SHAT PRO - FULL CONTROL</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --gold: #c5a059; --dark: #121212; --green: #005c4b; --bg: #0b141a; --header: #202c33; }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background: var(--dark); color: white; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* الهيدر */
+        /* شاشة الدخول */
+        #login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100dvh; padding: 20px; background: var(--dark); z-index: 100; }
+        .card { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 320px; text-align: center; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; outline: none; }
+        
+        /* شاشة الشات */
+        #chat-screen { display: none; flex-direction: column; height: 100dvh; width: 100%; background: var(--bg); }
         #chat-header { background: var(--header); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 60px; flex-shrink: 0; border-bottom: 1px solid #303d45; }
-        #del-all-btn { display: none; background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        /* منطقة الرسايل */
         #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
-        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; transition: all 0.2s; }
-        .admin-style { align-self: flex-start; background: var(--header); border-top-left-radius: 2px; }
-        .user-style { align-self: flex-end; background: var(--green); border-top-right-radius: 2px; }
-        .selected { border: 2px solid var(--gold); background: rgba(197, 160, 89, 0.3) !important; transform: scale(0.95); }
-
+        
+        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 15px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .admin-style { align-self: flex-start; background: var(--header); color: #e9edef; border-top-left-radius: 2px; }
+        .user-style { align-self: flex-end; background: var(--green); color: white; border-top-right-radius: 2px; }
+        .name { font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 4px; display: block; }
+        
         /* منطقة الإدخال */
-        #input-area { background: var(--header); padding: 10px 12px; display: flex; align-items: center; gap: 8px; min-height: 70px; flex-shrink: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-        #msg-text { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 25px; color: white; font-size: 16px; outline: none; user-select: auto; -webkit-user-select: auto; }
-        .btn-round { background: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; }
-
-        /* القائمة العائمة (Context Menu) */
-        #context-menu { display: none; position: fixed; background: #2a2a2a; border: 1px solid var(--gold); border-radius: 10px; z-index: 3000; overflow: hidden; width: 150px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .menu-item { padding: 12px; font-size: 14px; border-bottom: 1px solid #333; text-align: center; }
-        .menu-item:active { background: var(--gold); color: black; }
-
+        #input-area { background: var(--header); padding: 10px 12px; display: flex; align-items: center; gap: 8px; min-height: 70px; flex-shrink: 0; border-top: 1px solid #303d45; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        #msg-text { flex: 1; background: #2a3942; border: none; padding: 12px 15px; border-radius: 25px; color: white; font-size: 16px; }
+        .btn-round { background: #00a884; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
         /* لوحة الإدارة */
-        #admin-panel { display: none; position: fixed; inset: 0; background: #121212; z-index: 4000; padding: 20px; overflow-y: auto; }
-        .u-card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--gold); display: flex; justify-content: space-between; }
-        #login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100dvh; padding: 20px; position: fixed; width: 100%; background: var(--dark); z-index: 5000; }
-        .card { background: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid var(--gold); width: 100%; max-width: 320px; }
+        #admin-panel { display: none; position: fixed; inset: 0; background: #121212; z-index: 2000; padding: 20px; overflow-y: auto; }
+        .u-card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .btn-action { padding: 5px 10px; border-radius: 5px; border: none; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="login-box">
         <div class="card">
-            <h2 style="color:var(--gold); text-align:center;">AH SHAT LOG</h2>
+            <h2 style="color: var(--gold); margin-bottom: 15px;">AH SHAT LOG</h2>
             <select id="user-selector"></select>
             <input type="password" id="pass-input" placeholder="كلمة السر">
             <button onclick="login()" style="width:100%; background:var(--gold); padding:14px; border-radius:8px; border:none; font-weight:bold;">دخول</button>
@@ -53,64 +50,88 @@
 
     <div id="chat-screen">
         <div id="chat-header">
-            <button onclick="location.reload()" style="background:#444; color:white; border:none; padding:6px 12px; border-radius:8px;">خروج</button>
-            <button id="del-all-btn" onclick="clearMySide()">حذف الكل 🗑️</button>
+            <button onclick="location.reload()" style="background:#cc3333; color:white; border:none; padding:6px 12px; border-radius:8px;">خروج</button>
             <span id="who" style="font-weight:bold; color:var(--gold);"></span>
-            <button id="admin-btn" style="display:none; background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-weight:bold;" onclick="toggleAdmin(true)">إدارة</button>
+            <button id="admin-btn" style="display:none; background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-weight:bold;" onclick="toggleAdmin(true)">إدارة ⚙️</button>
         </div>
         
         <div id="messages"></div>
 
         <div id="input-area">
-            <label style="font-size:22px;">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
-            <button id="rec-btn" onclick="toggleRec()" style="background:none; border:none; font-size:22px; color:white;">🎤</button>
+            <label style="font-size:22px; cursor:pointer;">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
+            <button id="rec-btn" onclick="toggleRec()" style="background:none; border:none; font-size:22px;">🎤</button>
             <input type="text" id="msg-text" placeholder="مراسلة...">
             <button class="btn-round" onclick="send()">➤</button>
         </div>
     </div>
 
-    <div id="context-menu">
-        <div class="menu-item" onclick="handleMenu('edit')">تعديل الرسالة</div>
-        <div class="menu-item" style="color:#ff4d4d;" onclick="handleMenu('del')">حذف الرسالة</div>
-        <div class="menu-item" onclick="handleMenu('all')">تحديد الكل</div>
-        <div class="menu-item" style="background:#444;" onclick="hideMenu()">إلغاء</div>
-    </div>
-
     <div id="admin-panel">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>الإدارة</h2><button onclick="toggleAdmin(false)">X</button></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h2 style="color:var(--gold);">لوحة التحكم</h2>
+            <button onclick="toggleAdmin(false)" style="background:#444; color:white; border:none; padding:8px 15px; border-radius:8px;">إغلاق</button>
+        </div>
         <div id="u-list"></div>
-        <div style="background:#222; padding:15px; border-radius:12px; margin-top:20px;">
-            <input type="text" id="new-u" placeholder="الاسم"><input type="text" id="new-p" placeholder="الباسورد">
-            <button onclick="addUser()" style="width:100%; background:var(--gold); padding:10px; border-radius:8px; border:none;">إضافة</button>
+        <div style="margin-top:20px; background:#222; padding:15px; border-radius:12px;">
+            <h4>إضافة عضو جديد</h4>
+            <input type="text" id="new-u" placeholder="الاسم">
+            <input type="text" id="new-p" placeholder="الباسورد">
+            <button onclick="addUser()" style="width:100%; background:var(--gold); padding:10px; border-radius:8px; border:none; font-weight:bold;">حفظ</button>
         </div>
     </div>
 
     <script>
-        const config = { apiKey: "AIzaSyBmXQjJhAi82r_5hr94C-O2TzsSQDdF2mk", databaseURL: "https://ah-shat-default-rtdb.firebaseio.com/", projectId: "ah-shat" };
-        firebase.initializeApp(config); const db = firebase.database();
-        let me = "", currentTarget = null, pressTimer, mediaRecorder, audioChunks = [];
+        const config = {
+            apiKey: "AIzaSyBmXQjJhAi82r_5hr94C-O2TzsSQDdF2mk",
+            databaseURL: "https://ah-shat-default-rtdb.firebaseio.com/",
+            projectId: "ah-shat"
+        };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+        let me = "", mediaRecorder, audioChunks = [];
 
+        // تحديث قائمة اليوزرات في الدخول وفي لوحة الإدارة
         db.ref('users').on('value', snap => {
-            const data = snap.val() || {}; const sel = document.getElementById('user-selector');
-            const list = document.getElementById('u-list'); sel.innerHTML = '<option value="admin">المدير (admin)</option>';
-            list.innerHTML = ""; for (let u in data) {
+            const data = snap.val() || {};
+            const sel = document.getElementById('user-selector');
+            const list = document.getElementById('u-list');
+            sel.innerHTML = '<option value="admin">المدير (admin)</option>';
+            list.innerHTML = "";
+            for (let u in data) {
                 sel.innerHTML += `<option value="${u}">${u}</option>`;
-                list.innerHTML += `<div class="u-card"><div><b>${u}</b></div><button onclick="delUser('${u}')" style="color:red; background:none; border:none;">حذف</button></div>`;
+                list.innerHTML += `<div class="u-card">
+                    <div><b>${u}</b><br><small>Pass: ${data[u].pass}</small></div>
+                    <div>
+                        <button class="btn-action" style="background:#444; color:white;" onclick="editUser('${u}','${data[u].pass}')">تعديل</button>
+                        <button class="btn-action" style="background:red; color:white;" onclick="delUser('${u}')">حذف</button>
+                    </div>
+                </div>`;
             }
         });
 
         function login() {
-            const u = document.getElementById('user-selector').value, p = document.getElementById('pass-input').value;
+            const u = document.getElementById('user-selector').value;
+            const p = document.getElementById('pass-input').value;
             if (u === "admin" && p === "3480") start("admin", true);
-            else { db.ref('users/'+u).once('value', s => { if(s.val() && s.val().pass === p) start(u, false); else alert("خطأ!"); }); }
+            else {
+                db.ref('users/'+u).once('value', s => {
+                    if(s.val() && s.val().pass === p) start(u, false);
+                    else alert("بيانات خاطئة!");
+                });
+            }
         }
 
         function start(user, isAdmin) {
-            me = user; document.getElementById('login-box').style.display = 'none';
+            me = user;
+            document.getElementById('login-box').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
             document.getElementById('who').textContent = user;
             if(isAdmin) document.getElementById('admin-btn').style.display = 'block';
             loadMsgs();
+        }
+
+        function send() {
+            const t = document.getElementById('msg-text').value;
+            if(t.trim()) { db.ref('msgs').push({ s: me, c: t, t: 'text' }); document.getElementById('msg-text').value=""; }
         }
 
         function loadMsgs() {
@@ -118,73 +139,52 @@
             db.ref('msgs').on('value', snap => {
                 area.innerHTML = "";
                 snap.forEach(s => {
-                    const m = s.val(), key = s.key;
+                    const m = s.val();
+                    const key = s.key;
                     const div = document.createElement('div');
                     div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
-                    div.id = "msg-"+key;
                     
-                    // أحداث الضغط المطول للموبايل
-                    div.ontouchstart = (e) => startPress(e, key, m.c, m.t, m.s);
-                    div.ontouchend = () => clearTimeout(pressTimer);
-                    div.onmousedown = (e) => startPress(e, key, m.c, m.t, m.s);
-                    div.onmouseup = () => clearTimeout(pressTimer);
+                    // ميزة الحذف والتعديل عند الضغط
+                    div.onclick = () => { if(m.s === me || me === 'admin') showMsgMenu(key, m.c, m.t); };
 
                     let h = `<span class="name">${m.s}</span>`;
                     if(m.t === 'text') h += m.c;
                     else if(m.t === 'img') h += `<img src="${m.c}" style="width:100%; border-radius:10px;">`;
-                    else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:180px; height:35px;"></audio>`;
-                    div.innerHTML = h; area.appendChild(div);
+                    else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:35px;"></audio>`;
+                    
+                    div.innerHTML = h;
+                    area.appendChild(div);
                 });
                 area.scrollTop = area.scrollHeight;
             });
         }
 
-        function startPress(e, key, content, type, sender) {
-            if (sender !== me && me !== 'admin') return;
-            currentTarget = { key, content, type };
-            pressTimer = setTimeout(() => {
-                const menu = document.getElementById('context-menu');
-                menu.style.display = 'block';
-                menu.style.top = (e.touches ? e.touches[0].clientY : e.clientY) + "px";
-                menu.style.left = "20px";
-            }, 1500);
-        }
-
-        function handleMenu(action) {
-            hideMenu();
-            if (action === 'del') { if(confirm("حذف؟")) db.ref('msgs/'+currentTarget.key).remove(); }
-            else if (action === 'edit') {
-                if (currentTarget.type === 'text') {
-                    const n = prompt("تعديل:", currentTarget.content);
-                    if(n) db.ref('msgs/'+currentTarget.key).update({ c: n });
-                } else alert("نصوص فقط!");
-            }
-            else if (action === 'all') {
-                const bubbles = document.querySelectorAll('.bubble');
-                bubbles.forEach(b => b.classList.add('selected'));
-                document.getElementById('del-all-btn').style.display = 'block';
+        function showMsgMenu(key, content, type) {
+            const choice = prompt("اكتب (1) لحذف الرسالة\nاكتب (2) لتعديل النص\nأو اضغط Cancel للإلغاء");
+            if (choice === "1") {
+                if(confirm("حذف نهائي؟")) db.ref('msgs/' + key).remove();
+            } else if (choice === "2") {
+                if (type === 'text') {
+                    const newText = prompt("النص الجديد:", content);
+                    if (newText) db.ref('msgs/' + key).update({ c: newText });
+                } else alert("تعديل النص فقط متاح!");
             }
         }
 
-        function clearMySide() {
-            document.getElementById('messages').innerHTML = "";
-            document.getElementById('del-all-btn').style.display = 'none';
-            alert("تم إخفاء الرسايل من شاشتك.");
-        }
-
-        function hideMenu() { document.getElementById('context-menu').style.display = 'none'; }
-        function send() { 
-            const t = document.getElementById('msg-text').value; 
-            if(t.trim()) { db.ref('msgs').push({ s: me, c: t, t: 'text' }); document.getElementById('msg-text').value=""; }
-        }
+        // وظائف الإدارة
         function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'block' : 'none'; }
         function addUser() {
-            const n = document.getElementById('new-u').value, p = document.getElementById('new-p').value;
-            if(n && p) { db.ref('users/'+n).set({ pass: p }); alert('تم'); }
+            const n = document.getElementById('new-u').value;
+            const p = document.getElementById('new-p').value;
+            if(n && p) { db.ref('users/'+n).set({ pass: p }); alert('تم الحفظ'); }
         }
-        function delUser(n) { if(confirm('حذف؟')) db.ref('users/'+n).remove(); }
+        function editUser(n, p) {
+            const np = prompt("باسورد جديد لـ " + n, p);
+            if(np) db.ref('users/'+n).update({ pass: np });
+        }
+        function delUser(n) { if(confirm('حذف المستخدم؟')) db.ref('users/'+n).remove(); }
 
-        // ميديا
+        // ميديا وصوت
         async function toggleRec() {
             const btn = document.getElementById('rec-btn');
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -195,13 +195,15 @@
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const reader = new FileReader();
                     reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: 'audio' });
-                    reader.readAsDataURL(blob); audioChunks = [];
+                    reader.readAsDataURL(blob);
+                    audioChunks = [];
                 };
-                mediaRecorder.start(); btn.style.color = "red";
-            } else { mediaRecorder.stop(); btn.style.color = "white"; }
+                mediaRecorder.start(); btn.textContent = "🛑";
+            } else { mediaRecorder.stop(); btn.textContent = "🎤"; }
         }
         function upMedia(input, type) {
-            const file = input.files[0]; const reader = new FileReader();
+            const file = input.files[0];
+            const reader = new FileReader();
             reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: type });
             reader.readAsDataURL(file);
         }
