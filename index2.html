@@ -3,62 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AH SHAT - ULTIMATE</title>
+    <title>AH SHAT - MOBILE PRO</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --gold: #c5a059; --dark: #121212; --green: #075e54; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; user-select: none; }
-        .box { background: #1e1e1e; padding: 20px; border: 1px solid var(--gold); width: 340px; text-align: center; border-radius: 8px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; background: #282828; border: 1px solid var(--gold); color: white; border-radius: 4px; box-sizing: border-box; }
-        button { background: var(--gold); color: black; border: none; padding: 8px; cursor: pointer; font-weight: bold; border-radius: 4px; margin: 2px; }
-        #chat-screen { display: none; width: 100%; max-width: 500px; height: 100vh; background: #e5ddd5; flex-direction: column; }
-        #chat-header { background: var(--green); padding: 10px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #e5ddd5; }
-        .bubble { max-width: 85%; padding: 10px; border-radius: 10px; color: black; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-        .admin-style { align-self: flex-start; background: white; border-top-left-radius: 0; }
-        .user-style { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 0; }
-        .media-content { width: 100%; border-radius: 5px; margin-top: 5px; }
-        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; max-height: 85vh; overflow-y: auto; background: #1e1e1e; border: 2px solid var(--gold); padding: 20px; width: 320px; border-radius: 10px; }
-        .u-card { background: #282828; padding: 10px; margin: 8px 0; border-right: 4px solid var(--gold); text-align: right; }
-        .u-card div { margin-bottom: 5px; font-size: 13px; }
-        #input-area { padding: 10px; background: #f0f0f0; display: flex; align-items: center; gap: 5px; }
-        .btn-action { font-size: 10px; padding: 4px 8px; margin-left: 5px; }
+        :root { --gold: #c5a059; --dark: #121212; --green: #075e54; --bg: #0b141a; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--dark); color: white; margin: 0; padding: 0; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
+        
+        /* شاشة الدخول */
+        .login-container { background: #1e1e1e; padding: 30px; border-radius: 15px; border: 1px solid var(--gold); width: 90%; max-width: 350px; align-self: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; }
+        input:focus { border-color: var(--gold); outline: none; }
+        .btn-main { width: 100%; background: var(--gold); color: black; border: none; padding: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; }
+
+        /* شاشة الشات */
+        #chat-screen { display: none; width: 100%; max-width: 600px; height: 100vh; background: var(--bg); flex-direction: column; position: relative; }
+        #chat-header { background: #202c33; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #374045; z-index: 10; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
+        
+        /* الفقاعات */
+        .bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 15px; line-height: 1.4; position: relative; color: #e9edef; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .admin-style { align-self: flex-start; background: #202c33; border-top-left-radius: 0; }
+        .user-style { align-self: flex-end; background: #005c4b; border-top-right-radius: 0; }
+        .sender-name { font-size: 11px; color: var(--gold); font-weight: bold; display: block; margin-bottom: 3px; }
+
+        /* منطقة الإدخال */
+        #input-area { background: #202c33; padding: 10px; display: flex; align-items: center; gap: 8px; }
+        #msg-text { flex: 1; background: #2a3942; border: none; padding: 10px 15px; border-radius: 20px; color: white; font-size: 15px; }
+        .icon-btn { font-size: 22px; cursor: pointer; padding: 5px; filter: grayscale(0.5); }
+        .send-btn { background: #00a884; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* لوحة التحكم (مودرن) */
+        #admin-panel { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 100; padding: 20px; overflow-y: auto; }
+        .u-card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-right: 4px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .media-content { width: 100%; border-radius: 8px; margin-top: 5px; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="login-box" class="box">
-        <h2 style="color: var(--gold)">AH SHAT LOG</h2>
+    <div id="login-box" class="login-container">
+        <h2 style="color: var(--gold); margin-top:0;">AH SHAT LOG</h2>
         <select id="user-selector"></select>
         <input type="password" id="pass-input" placeholder="كلمة السر">
-        <button onclick="login()" style="width:100%">دخول</button>
+        <button class="btn-main" onclick="login()">دخول للمحادثة</button>
     </div>
 
     <div id="chat-screen">
         <div id="chat-header">
-            <button onclick="location.reload()" style="background:#b33939; color:white; border:none; padding:5px; border-radius:4px;">خروج</button>
-            <span id="who"></span>
-            <button id="admin-btn" style="display:none; font-size:12px;" onclick="toggleAdmin(true)">إدارة ⚙️</button>
+            <button onclick="location.reload()" style="background:transparent; color:#ff4d4d; border:1px solid #ff4d4d; border-radius:5px; padding:4px 10px;">خروج</button>
+            <span id="who" style="font-weight:bold;"></span>
+            <button id="admin-btn" style="display:none; background:var(--gold); border:none; border-radius:5px; padding:4px 10px;" onclick="toggleAdmin(true)">إدارة ⚙️</button>
         </div>
         <div id="messages"></div>
         <div id="input-area">
-            <label style="font-size:22px; cursor:pointer;">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
-            <button id="rec-btn" onclick="toggleRec()" style="background:none; font-size:22px;">🎤</button>
-            <input type="text" id="msg-text" style="flex:1; color:black; border-radius:20px; padding:8px; border:1px solid #ccc;" placeholder="رسالة...">
-            <button onclick="send()" style="background:var(--green); color:white; border-radius:50%; width:40px; height:40px;">➤</button>
+            <label class="icon-btn">📷<input type="file" accept="image/*" hidden onchange="upMedia(this, 'img')"></label>
+            <button id="rec-btn" onclick="toggleRec()" class="icon-btn" style="background:none; border:none;">🎤</button>
+            <input type="text" id="msg-text" placeholder="اكتب رسالة...">
+            <button class="send-btn" onclick="send()">➤</button>
         </div>
-    </div>
 
-    <div id="admin-panel">
-        <h3 style="color:var(--gold); margin-top:0;">إدارة المستخدمين</h3>
-        <div style="background:#333; padding:10px; border-radius:5px;">
-            <input type="text" id="new-u" placeholder="اسم المستخدم الجديد">
-            <input type="text" id="new-p" placeholder="باسورد المستخدم">
-            <button onclick="addUser()" style="width:100%">إضافة مستخدم جديد +</button>
+        <div id="admin-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:var(--gold);">إدارة الأعضاء</h3>
+                <button onclick="toggleAdmin(false)" style="background:#444; color:white; border:none; padding:5px 15px; border-radius:5px;">إغلاق</button>
+            </div>
+            <div style="background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
+                <input type="text" id="new-u" placeholder="الاسم الجديد">
+                <input type="text" id="new-p" placeholder="الباسورد">
+                <button class="btn-main" onclick="addUser()">إضافة +</button>
+            </div>
+            <div id="u-list"></div>
         </div>
-        <div id="u-list" style="margin-top:15px;"></div>
-        <button onclick="toggleAdmin(false)" style="background:#444; color:white; width:100%; margin-top:10px;">إغلاق</button>
     </div>
 
     <script>
@@ -72,7 +88,7 @@
 
         let me = "", isAdmin = false, mediaRecorder, audioChunks = [];
 
-        // مزامنة اليوزرات مع لوحة التحكم
+        // تحديث اليوزرات
         db.ref('users').on('value', snap => {
             const data = snap.val() || {};
             const sel = document.getElementById('user-selector');
@@ -81,24 +97,24 @@
             list.innerHTML = "";
             for (let u in data) {
                 sel.innerHTML += `<option value="${u}">${u}</option>`;
-                list.innerHTML += `
-                    <div class="u-card">
-                        <div><b>اليوزر:</b> ${u}</div>
-                        <div><b>الباسورد:</b> ${data[u].pass}</div>
-                        <button class="btn-action" onclick="editUser('${u}', '${data[u].pass}')">تعديل 📝</button>
-                        <button class="btn-action" style="background:red; color:white;" onclick="delUser('${u}')">حذف 🗑️</button>
-                    </div>`;
+                list.innerHTML += `<div class="u-card">
+                    <div><b>${u}</b><br><small>Pass: ${data[u].pass}</small></div>
+                    <div>
+                        <button onclick="editUser('${u}','${data[u].pass}')" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:4px 8px; border-radius:4px;">تعديل</button>
+                        <button onclick="delUser('${u}')" style="background:none; border:1px solid red; color:red; padding:4px 8px; border-radius:4px;">حذف</button>
+                    </div>
+                </div>`;
             }
         });
 
         function login() {
             const u = document.getElementById('user-selector').value;
             const p = document.getElementById('pass-input').value;
-            if (u === "admin" && p === "3480") { start("admin", true); }
+            if (u === "admin" && p === "3480") start("admin", true);
             else {
                 db.ref('users/'+u).once('value', s => {
                     if(s.val() && s.val().pass === p) start(u, false);
-                    else alert("خطأ في البيانات");
+                    else alert("بيانات غلط!");
                 });
             }
         }
@@ -124,61 +140,52 @@
             reader.readAsDataURL(file);
         }
 
-        // ميزة التسجيل الصوتي
         async function toggleRec() {
             const btn = document.getElementById('rec-btn');
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: 'audio', ts: Date.now() });
-                    reader.readAsDataURL(blob);
-                    audioChunks = [];
-                };
-                mediaRecorder.start();
-                btn.textContent = "🛑"; btn.style.color = "red";
-            } else {
-                mediaRecorder.stop();
-                btn.textContent = "🎤"; btn.style.color = "black";
-            }
+            try {
+                if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = (e) => db.ref('msgs').push({ s: me, c: e.target.result, t: 'audio', ts: Date.now() });
+                        reader.readAsDataURL(blob);
+                        audioChunks = [];
+                    };
+                    mediaRecorder.start(); btn.textContent = "🛑";
+                } else { mediaRecorder.stop(); btn.textContent = "🎤"; }
+            } catch(err) { alert("تأكد من إعطاء إذن المايك للمتصفح!"); }
         }
 
         function loadMsgs() {
-            db.ref('msgs').limitToLast(100).on('child_added', s => {
+            const area = document.getElementById('messages');
+            db.ref('msgs').limitToLast(50).on('child_added', s => {
                 const m = s.val();
-                const area = document.getElementById('messages');
                 const div = document.createElement('div');
                 div.className = `bubble ${m.s === 'admin' ? 'admin-style' : 'user-style'}`;
-                let h = `<b>${m.s}:</b><br>`;
+                let h = `<span class="sender-name">${m.s}</span>`;
                 if(m.t === 'text') h += m.c;
                 else if(m.t === 'img') h += `<img src="${m.c}" class="media-content">`;
-                else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:200px; height:30px; margin-top:5px;"></audio>`;
+                else if(m.t === 'audio') h += `<audio src="${m.c}" controls style="width:180px;"></audio>`;
                 div.innerHTML = h; area.appendChild(div);
                 area.scrollTop = area.scrollHeight;
             });
         }
 
         function toggleAdmin(s) { document.getElementById('admin-panel').style.display = s ? 'block' : 'none'; }
-        
         function addUser() {
-            const n = document.getElementById('new-u').value.trim();
-            const p = document.getElementById('new-p').value.trim();
+            const n = document.getElementById('new-u').value;
+            const p = document.getElementById('new-p').value;
             if(n && p) { db.ref('users/'+n).set({ pass: p }); document.getElementById('new-u').value=""; document.getElementById('new-p').value=""; }
         }
-
-        function editUser(oldName, oldPass) {
-            const newName = prompt("تعديل اسم اليوزر:", oldName);
-            const newPass = prompt("تعديل الباسورد:", oldPass);
-            if(newName && newPass) {
-                if(newName !== oldName) db.ref('users/'+oldName).remove(); // حذف القديم لو الاسم اتغير
-                db.ref('users/'+newName).set({ pass: newPass });
-            }
+        function editUser(n, p) {
+            const nn = prompt("الاسم الجديد:", n);
+            const np = prompt("الباسورد الجديد:", p);
+            if(nn && np) { if(nn !== n) db.ref('users/'+n).remove(); db.ref('users/'+nn).set({ pass: np }); }
         }
-
-        function delUser(n) { if(confirm('هل تريد حذف '+n+' نهائياً؟')) db.ref('users/'+n).remove(); }
+        function delUser(n) { if(confirm('حذف؟')) db.ref('users/'+n).remove(); }
     </script>
 </body>
 </html>
